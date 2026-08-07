@@ -1,0 +1,243 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  admin
+  manager
+  viewer
+}
+
+enum ProductStatus {
+  active
+  inactive
+  discontinued
+  archived
+}
+
+enum MovementType {
+  IN
+  OUT
+  TRANSFER
+  ADJUSTMENT
+}
+
+enum PurchaseOrderStatus {
+  draft
+  ordered
+  received
+  cancelled
+}
+
+enum NotificationType {
+  info
+  success
+  warning
+  error
+}
+
+enum NotificationCategory {
+  inventory
+  stock
+  purchase_order
+  user
+  permission
+  system
+}
+
+model User {
+  id              String          @id @default(cuid())
+  email           String          @unique
+  password        String
+  name            String
+  role            Role            @default(viewer)
+  isActive        Boolean         @default(true)
+  lastLoginAt     DateTime?
+  preferences     Json?
+  avatarUrl       String?
+  avatarKey       String?
+  stockMovements  StockMovement[]
+  purchaseOrders  PurchaseOrder[]
+  auditLogs       AuditLog[]
+  userPermissions UserPermission[]
+  notifications   Notification[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model Notification {
+  id        String               @id @default(cuid())
+  title     String
+  message   String
+  type      NotificationType     @default(info)
+  category  NotificationCategory @default(system)
+  userId    String?
+  user      User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  role      Role?
+  isRead    Boolean              @default(false)
+  metadata  Json?
+  createdAt DateTime             @default(now())
+  readAt    DateTime?
+
+  @@index([userId, isRead, createdAt])
+  @@index([role, isRead, createdAt])
+  @@index([createdAt])
+}
+
+model UserPermission {
+  id       String  @id @default(cuid())
+  userId   String
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  section  String
+  canRead  Boolean @default(false)
+  canWrite Boolean @default(false)
+
+  @@unique([userId, section])
+}
+
+model RolePermission {
+  id       String  @id @default(cuid())
+  role     Role
+  section  String
+  canRead  Boolean @default(true)
+  canWrite Boolean @default(false)
+
+  @@unique([role, section])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Supplier {
+  id             String          @id @default(cuid())
+  name           String
+  email          String?
+  phone          String?
+  address        String?
+  contactPerson  String?
+  products       Product[]
+  purchaseOrders PurchaseOrder[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Warehouse {
+  id             String          @id @default(cuid())
+  name           String
+  location       String?
+  description    String?
+  products       Product[]
+  stockMovements StockMovement[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model UnitOfMeasure {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  symbol    String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id                 String              @id @default(cuid())
+  name               String
+  sku                String              @unique
+  barcode            String?
+  categoryId         String
+  category           Category            @relation(fields: [categoryId], references: [id])
+  supplierId         String
+  supplier           Supplier            @relation(fields: [supplierId], references: [id])
+  unitId             String?
+  unit               UnitOfMeasure?      @relation(fields: [unitId], references: [id])
+  costPrice          Decimal             @db.Decimal(10, 2)
+  sellingPrice       Decimal             @db.Decimal(10, 2)
+  quantity           Int                 @default(0)
+  reorderLevel       Int                 @default(0)
+  warehouseId        String
+  warehouse          Warehouse           @relation(fields: [warehouseId], references: [id])
+  status             ProductStatus       @default(active)
+  stockMovements     StockMovement[]
+  purchaseOrderItems PurchaseOrderItem[]
+  reorderRule        ReorderRule?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model ReorderRule {
+  id          String   @id @default(cuid())
+  productId   String   @unique
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  minQuantity Int
+  maxQuantity Int?
+  autoPo      Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model StockMovement {
+  id              String       @id @default(cuid())
+  productId       String
+  product         Product      @relation(fields: [productId], references: [id])
+  warehouseId     String
+  warehouse       Warehouse    @relation(fields: [warehouseId], references: [id])
+  type            MovementType
+  quantity        Int
+  reference       String?
+  notes           String?
+  fromWarehouseId String?
+  toWarehouseId   String?
+  createdById     String?
+  createdBy       User?        @relation(fields: [createdById], references: [id])
+  createdAt       DateTime     @default(now())
+}
+
+model PurchaseOrder {
+  id          String              @id @default(cuid())
+  supplierId  String
+  supplier    Supplier            @relation(fields: [supplierId], references: [id])
+  status      PurchaseOrderStatus @default(draft)
+  totalAmount Decimal             @db.Decimal(10, 2) @default(0)
+  items       PurchaseOrderItem[]
+  createdById String?
+  createdBy   User?               @relation(fields: [createdById], references: [id])
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model PurchaseOrderItem {
+  id               String        @id @default(cuid())
+  purchaseOrderId  String
+  purchaseOrder    PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  productId        String
+  product          Product       @relation(fields: [productId], references: [id])
+  quantity         Int
+  unitPrice        Decimal       @db.Decimal(10, 2)
+  receivedQuantity Int           @default(0)
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  createdAt DateTime @default(now())
+}

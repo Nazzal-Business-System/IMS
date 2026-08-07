@@ -1,0 +1,24 @@
+{
+  "name": "ims-demo",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=@ims/api & npm run dev --workspace=@ims/web",
+    "dev:api": "npm run dev --workspace=@ims/api",
+    "dev:web": "npm run dev --workspace=@ims/web",
+    "build": "npm run build --workspaces --if-present",
+    "db:migrate": "npm run db:migrate --workspace=@ims/api",
+    "db:seed": "npm run db:seed --workspace=@ims/api",
+    "db:generate": "npm run db:generate --workspace=@ims/api",
+    "lint": "npm run lint --workspace=@ims/web",
+    "typecheck": "npm run typecheck --workspace=@ims/api && npm run typecheck --workspace=@ims/web",
+    "smoke": "node scripts/ims-smoke-check.mjs",
+    "ensure-direct-url": "node scripts/ensure-direct-url.mjs"
+  }
+}
