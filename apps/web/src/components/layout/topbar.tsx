@@ -9,6 +9,8 @@ import {
   LogOut,
   Menu,
   Moon,
+  PanelLeft,
+  PanelLeftClose,
   Settings,
   Sun,
   User,
@@ -57,10 +59,17 @@ const SEGMENT_LABELS: Record<string, string> = {
 
 interface TopbarProps {
   onMenuClick?: () => void;
+  onSidebarToggle?: () => void;
+  sidebarCollapsed?: boolean;
   className?: string;
 }
 
-export function Topbar({ onMenuClick, className }: TopbarProps) {
+export function Topbar({
+  onMenuClick,
+  onSidebarToggle,
+  sidebarCollapsed = false,
+  className,
+}: TopbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout, canRead } = useAuth();
@@ -123,6 +132,21 @@ export function Topbar({ onMenuClick, className }: TopbarProps) {
         aria-label={t("topbar.openMenu")}
       >
         <Menu className="h-5 w-5" />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="hidden shrink-0 lg:inline-flex"
+        onClick={onSidebarToggle}
+        aria-label={t(sidebarCollapsed ? "topbar.expandSidebar" : "topbar.collapseSidebar")}
+        title={t(sidebarCollapsed ? "topbar.expandSidebar" : "topbar.collapseSidebar")}
+      >
+        {sidebarCollapsed ? (
+          <PanelLeft className="h-5 w-5 rtl:rotate-180" />
+        ) : (
+          <PanelLeftClose className="h-5 w-5 rtl:rotate-180" />
+        )}
       </Button>
 
       <nav aria-label={t("topbar.breadcrumb")} className="hidden min-w-0 items-center gap-1 text-sm md:flex">

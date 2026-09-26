@@ -18,8 +18,6 @@ import {
   ArrowUpDown,
   Settings,
   Shield,
-  PanelLeftClose,
-  PanelLeft,
   LogOut,
   Loader2,
   type LucideIcon,
@@ -29,7 +27,6 @@ import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { useNavigationLoading } from "@/lib/navigation-loading";
 import { useUnsavedGuard } from "@/lib/unsaved-guard";
-import { Button } from "@/components/ui/button";
 import { GuardedLink } from "@/components/layout/guarded-link";
 import type { PermissionSection } from "@ims/shared-types";
 
@@ -66,7 +63,6 @@ interface SidebarNavProps {
   resizable?: boolean;
   onSidebarMouseEnter?: () => void;
   onSidebarMouseLeave?: () => void;
-  onToggleCollapsed: () => void;
   onWidthChange?: (width: number) => void;
   mobileOpen?: boolean;
   onMobileClose?: () => void;
@@ -80,7 +76,6 @@ export function SidebarNav({
   resizable = false,
   onSidebarMouseEnter,
   onSidebarMouseLeave,
-  onToggleCollapsed,
   onWidthChange,
   mobileOpen = false,
   onMobileClose,
@@ -194,16 +189,6 @@ export function SidebarNav({
         {showNarrow && (
           <span className="text-lg font-bold text-accent" title={t("app.name")}>N</span>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn("hidden shrink-0 cursor-pointer lg:flex", showNarrow && "absolute end-1 top-3")}
-          onClick={onToggleCollapsed}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-        </Button>
       </div>
 
       <nav className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-0.5 min-h-0">

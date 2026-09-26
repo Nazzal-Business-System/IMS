@@ -87,7 +87,6 @@ export function PremiumShell({ children }: { children: React.ReactNode }) {
           widthPx={SIDEBAR_DEFAULT}
           collapsed={false}
           resizable={false}
-          onToggleCollapsed={toggleCollapsed}
           mobileOpen={mobileOpen}
           onMobileClose={() => setMobileOpen(false)}
         />
@@ -114,7 +113,6 @@ export function PremiumShell({ children }: { children: React.ReactNode }) {
             if (collapsed) setSidebarHover(true);
           }}
           onSidebarMouseLeave={() => setSidebarHover(false)}
-          onToggleCollapsed={toggleCollapsed}
           onWidthChange={handleSidebarWidthChange}
         />
       </div>
@@ -123,7 +121,11 @@ export function PremiumShell({ children }: { children: React.ReactNode }) {
         className="flex min-h-screen flex-col transition-[padding] duration-300 ease-out max-lg:ps-0 lg:ps-[var(--sidebar-width)]"
         style={{ "--sidebar-width": `${effectiveWidth}px` } as React.CSSProperties}
       >
-        <Topbar onMenuClick={() => setMobileOpen(true)} />
+        <Topbar
+          sidebarCollapsed={collapsed}
+          onSidebarToggle={toggleCollapsed}
+          onMenuClick={() => setMobileOpen(true)}
+        />
         {showDemoBanner() ? <DemoBanner /> : null}
         <main className="density-pad flex-1 p-4 lg:p-6">
           <div className="ims-mgmt-content mx-auto w-full max-w-[90rem]">
